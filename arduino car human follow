@@ -1,0 +1,135 @@
+#include <NewPing.h>
+
+#define ULTRASONIC_SENSOR_TRIG A0
+#define ULTRASONIC_SENSOR_ECHO A1
+
+#define max_speed 200
+#define penyesuaian 55
+
+#define min_jarak 10
+#define max_jarak 30
+
+#define ir_kn A2
+#define ir_kr A3
+
+//Right motor
+int motor_dp_kn_mj = 9;
+int motor_dp_kn_md = 8;
+
+int motor_dp_kr_mj = 7;
+int motor_dp_kr_md = 6;
+
+int motor_bk_kn_mj = 5;
+int motor_bk_kn_md = 4;
+
+int motor_bk_kr_mj = 3;
+int motor_bk_kr_md = 2;
+
+int kn = 10;
+int kr = 11;
+
+NewPing mySensor(ULTRASONIC_SENSOR_TRIG, ULTRASONIC_SENSOR_ECHO, 400);
+
+void setup()
+{
+  //SERIAL COMUNICASI
+  Serial.begin(9600);
+  //depan
+  pinMode(motor_dp_kn_mj, OUTPUT);
+  pinMode(motor_dp_kn_md, OUTPUT);
+  pinMode(motor_dp_kr_mj, OUTPUT);
+  pinMode(motor_dp_kr_md, OUTPUT);
+  //blakang
+  pinMode(motor_bk_kn_mj, OUTPUT);
+  pinMode(motor_bk_kn_md, OUTPUT);
+  pinMode(motor_bk_kr_mj, OUTPUT);
+  pinMode(motor_bk_kr_md, OUTPUT);
+  //kecepatan
+  pinMode(kn, OUTPUT); 
+  pinMode(kr, OUTPUT);
+
+  pinMode(ir_kn, INPUT);
+  pinMode(ir_kr, INPUT);
+  rotateMotor(0,0);   
+}
+
+
+void loop()
+{
+  int jarak = mySensor.ping_cm();
+  int ir_kn_Value = digitalRead(ir_kn);
+  int ir_kr_Value = digitalRead(ir_kr);
+
+  // deteksi = low 
+  
+  //kanan
+   if (ir_kn_Value == LOW && ir_kr_Value == HIGH )
+  {
+      rotateMotor(max_speed - penyesuaian , max_speed + penyesuaian ); 
+  }
+  //kiri
+  else if (ir_kn_Value == HIGH && ir_kr_Value == LOW )
+  {
+      rotateMotor(max_speed + penyesuaian, max_speed - penyesuaian); 
+  }
+  //lurus
+  else if (jarak >= min_jarak && jarak <= max_jarak)
+  {
+    rotateMotor(max_speed, max_speed);
+  }
+  //stop the motors
+  else 
+  {
+    rotateMotor(0, 0);
+  }
+}
+
+
+void rotateMotor(int kn_spd, int kr_spd)
+{
+  if (kn_spd < 0)  //kanan maju
+  {
+    digitalWrite(motor_dp_kn_mj, HIGH);
+    digitalWrite(motor_dp_kn_md, LOW);  
+    digitalWrite(motor_bk_kn_mj, HIGH);
+    digitalWrite(motor_bk_kn_md, LOW);
+  }
+  else if (kn_spd > 0) //kanan mundur
+  {
+    digitalWrite(motor_dp_kn_mj, LOW);
+    digitalWrite(motor_dp_kn_md, HIGH);  
+    digitalWrite(motor_bk_kn_mj, LOW);
+    digitalWrite(motor_bk_kn_md, HIGH);   
+  }
+  else  // stop
+  {
+    digitalWrite(motor_dp_kn_mj, LOW);
+    digitalWrite(motor_dp_kn_md, LOW);  
+    digitalWrite(motor_bk_kn_mj, LOW);
+    digitalWrite(motor_bk_kn_md, LOW);    
+  }
+
+  if (kr_spd < 0) // kiri maju
+  {
+    digitalWrite(motor_dp_kr_mj, HIGH);
+    digitalWrite(motor_dp_kr_md, LOW);  
+    digitalWrite(motor_bk_kr_mj, HIGH);
+    digitalWrite(motor_bk_kr_md, LOW); 
+  }
+  else if (kr_spd > 0) //kiri mundur
+  {
+    digitalWrite(motor_dp_kr_mj, LOW);
+    digitalWrite(motor_dp_kr_md, HIGH);  
+    digitalWrite(motor_bk_kr_mj, LOW);
+    digitalWrite(motor_bk_kr_md, HIGH);      
+  }
+  else //stop
+  {
+    digitalWrite(motor_dp_kr_mj, LOW);
+    digitalWrite(motor_dp_kr_md, LOW);  
+    digitalWrite(motor_bk_kr_mj, LOW);
+    digitalWrite(motor_bk_kr_md, LOW);      
+  }
+  analogWrite(kn, abs(kn_spd));
+  analogWrite(kr, abs(kr_spd));    
+}
